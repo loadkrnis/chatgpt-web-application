@@ -3,10 +3,10 @@ const email = document.getElementById('email');
 const password = document.getElementById('password');
 
 loginButton.addEventListener('click', async () => {
+    // if (email.value === '' || password.value === '' || email.value.includes('@') === false) {
     if (email.value === '' || password.value === '') {
         return
     }
-    // fetch on post method with email, password /login endpoint
     const response = await fetch('/login', {
         method: 'POST',
         headers: {
@@ -18,6 +18,10 @@ loginButton.addEventListener('click', async () => {
         })
     });
     const body = await response.json();
-    console.log('click!');
-    console.log(body);
+    if (body.success === false) {
+        const elementById = document.getElementById('alert');
+        elementById.classList.remove('hidden')
+        return;
+    }
+    document.location.href = '/chat.html';
 })

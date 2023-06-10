@@ -6,7 +6,6 @@ services:
     image: mysql:8
     container_name: massage-star-db
     environment:
-      - "MYSQL_RANDOM_ROOT_PASSWORD=true"
       - "MYSQL_DATABASE=test"
       - "MYSQL_USER=test"
       - "MYSQL_PASSWORD=test"

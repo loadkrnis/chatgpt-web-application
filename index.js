@@ -7,11 +7,47 @@ const path = require('path');
 const multer = require('multer');
 const {v4: uuidv4} = require('uuid');
 const session = require("express-session");
+const {dataSource} = require("./entity/dataSource");
 require("dotenv").config();
 const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
+
+
+dataSource
+    .initialize()
+    .then(function () {
+        // var category1 = {
+        //     name: "TypeScript",
+        // }
+        // var category2 = {
+        //     name: "Programming",
+        // }
+        //
+        // var post = {
+        //     title: "Control flow based type analysis",
+        //     text: "TypeScript 2.0 implements a control flow-based type analysis for local variables and parameters.",
+        //     categories: [category1, category2],
+        // }
+        //
+        // var postRepository = dataSource.getRepository("post")
+        // postRepository
+        //     .save(post)
+        //     .then(function (savedPost) {
+        //         console.log("Post has been saved: ", savedPost)
+        //         console.log("Now lets load all posts: ")
+        //
+        //         return postRepository.find()
+        //     })
+        //     .then(function (allPosts) {
+        //         console.log("All posts: ", allPosts)
+        //     })
+    })
+    .catch(function (error) {
+        console.log("Error: ", error)
+    })
+
 
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 app.use(session({
@@ -28,7 +64,7 @@ app.use(express.json());
 app.use(function (req, res, next) {
     const userId = req.session.userId;
     const url = req.url;
-    if (url.includes('assets') || url.includes('login') || url.includes('signup')) {
+    if (url.includes('assets') || url.includes('login') || url.includes('sign-up')) {
         return next();
     }
     if (userId === undefined) {
@@ -129,7 +165,31 @@ app.post('/login', async (req, res) => {
     console.log(req.session.userId);
     console.log(req.body.email);
     console.log(req.body.password);
-    req.session.userId = 10;
+    const userRepository = dataSource.getRepository("user")
+    const user = await userRepository.findOne({
+        where: {
+            email: req.body.email,
+            password: req.body.password,
+        }
+    });
+    if (!user) {
+        return res.json({
+            success: false,
+        });
+    }
+    req.session.userId = user.id;
+    return res.json({
+        success: true,
+    });
+})
+
+app.post('/sign-up', async (req, res) => {
+    const userRepository = dataSource.getRepository("user");
+    const user = await userRepository.save({
+        email: req.body.email,
+        password: req.body.password,
+    });
+    req.session.userId = user.id;
     return res.json({
         success: true,
     });
