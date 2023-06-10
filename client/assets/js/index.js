@@ -10,6 +10,22 @@ const modelSelect = document.getElementById('model-select');
 const responseList = document.getElementById('response-list');
 const fileInput = document.getElementById("whisper-file");
 
+fetch('/chat-history', {
+    method: 'GET',
+}).then(response => response.json()).then(response => {
+    console.log(response.data);
+    response.data.forEach(chat => {
+        console.log(chat);
+        addResponse(true, chat.request, true, chat.id);
+        if (chat.model === 'image') {
+            addResponse(false, '', true, chat.id);
+            const responseElement = document.getElementById(chat.id);
+            responseElement.innerHTML = `<img src="${chat.response}" class="ai-image" alt="generated image"/>`
+        } else {
+            addResponse(false, chat.response, true, chat.id);
+        }
+    });
+});
 modelSelect.addEventListener("change", function () {
     if (modelSelect.value === "whisper") {
         fileInput.style.display = "block";
@@ -46,8 +62,8 @@ function generateUniqueId() {
 }
 
 
-function addResponse(selfFlag, prompt, onlyChat) {
-    const uniqueId = generateUniqueId();
+function addResponse(selfFlag, prompt, onlyChat, injectUniqueId = null) {
+    const uniqueId = injectUniqueId ?? generateUniqueId();
     const html = `
             <div class="response-container ${selfFlag ? 'my-question' : 'chatgpt-response'} ${onlyChat ? 'chat' : ''}">
                 <img class="avatar-image" src="assets/img/${selfFlag ? 'me' : 'chatgpt'}.png" alt="avatar"/>

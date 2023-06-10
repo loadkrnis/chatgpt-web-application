@@ -18,44 +18,20 @@ const openai = new OpenAIApi(configuration);
 dataSource
     .initialize()
     .then(function () {
-        // var category1 = {
-        //     name: "TypeScript",
-        // }
-        // var category2 = {
-        //     name: "Programming",
-        // }
-        //
-        // var post = {
-        //     title: "Control flow based type analysis",
-        //     text: "TypeScript 2.0 implements a control flow-based type analysis for local variables and parameters.",
-        //     categories: [category1, category2],
-        // }
-        //
-        // var postRepository = dataSource.getRepository("post")
-        // postRepository
-        //     .save(post)
-        //     .then(function (savedPost) {
-        //         console.log("Post has been saved: ", savedPost)
-        //         console.log("Now lets load all posts: ")
-        //
-        //         return postRepository.find()
-        //     })
-        //     .then(function (allPosts) {
-        //         console.log("All posts: ", allPosts)
-        //     })
+        console.log('DB sync 완료')
     })
     .catch(function (error) {
         console.log("Error: ", error)
     })
 
-
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 app.use(session({
     secret: 'SECRET', // 암호화하는 데 쓰일 키
-    resave: false, // 세션을 언제나 저장할지 설정함
-    saveUninitialized: true, // 세션에 저장할 내역이 없더라도 처음부터 세션을 생성할지 설정
+    resave: true, // 세션을 언제나 저장할지 설정함
+    saveUninitialized: false, // 세션에 저장할 내역이 없더라도 처음부터 세션을 생성할지 설정
     cookie: {	// 세션 쿠키 설정 (세션 관리 시 클라이언트에 보내는 쿠키)
         httpOnly: false, // 자바스크립트를 통해 세션 쿠키를 사용할 수 없도록 함
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 쿠키의 유효기간 설정 (30일)
     },
 }));
 
@@ -105,6 +81,14 @@ app.post('/transcribe', upload.single('audio'), async (req, res) => {
             "whisper-1",
             'text'
         );
+        await postRepository.save(
+            {
+                userId: req.session.userId,
+                request: '첨부한 음성인식 파일',
+                response: resp.data.text,
+                model: 'chatgpt',
+            }
+        )
         return res.send(resp.data.text);
     } catch (error) {
         const errorMsg = error.response ? error.response.data.error : `${error}`;
@@ -124,6 +108,7 @@ app.post('/get-prompt-result', async (req, res) => {
         // Send a 400 status code and a message indicating that the prompt is missing
         return res.status(400).send({error: 'Prompt is missing in the request'});
     }
+    const postRepository = dataSource.getRepository("post")
 
     try {
         // Use the OpenAI SDK to create a completion
@@ -134,17 +119,36 @@ app.post('/get-prompt-result', async (req, res) => {
                 response_format: 'url',
                 size: '512x512'
             });
-            return res.send(result.data.data[0].url);
+            const response = result.data.data[0].url;
+            console.log(response)
+            await postRepository.save(
+                {
+                    userId: req.session.userId,
+                    request: prompt,
+                    response: response,
+                    model: 'image',
+                }
+            )
+
+            return res.send(response);
         }
         if (model === 'chatgpt') {
-            console.log(prompt)
             const result = await openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
                 messages: [
                     {role: "user", content: prompt}
                 ]
             })
-            return res.send(result.data.choices[0]?.message?.content);
+            const response = result.data.choices[0]?.message?.content;
+            await postRepository.save(
+                {
+                    userId: req.session.userId,
+                    request: prompt,
+                    response: response,
+                    model: 'chatgpt',
+                }
+            )
+            return res.send(response);
         }
         const completion = await openai.createCompletion({
             model: 'text-davinci-003', // model name
@@ -162,9 +166,6 @@ app.post('/get-prompt-result', async (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
-    console.log(req.session.userId);
-    console.log(req.body.email);
-    console.log(req.body.password);
     const userRepository = dataSource.getRepository("user")
     const user = await userRepository.findOne({
         where: {
@@ -192,6 +193,24 @@ app.post('/sign-up', async (req, res) => {
     req.session.userId = user.id;
     return res.json({
         success: true,
+    });
+})
+
+app.get('/chat-history', async (req, res) => {
+    const userId = req.session.userId;
+    console.log('userId', userId);
+    const postRepository = dataSource.getRepository("post");
+    const result = await postRepository.find({
+        where: {
+            userId: userId,
+        },
+        order: {
+            id: "ASC",
+        }
+    });
+    return res.json({
+        success: true,
+        data: result,
     });
 })
 

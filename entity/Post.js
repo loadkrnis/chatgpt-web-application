@@ -8,19 +8,17 @@ module.exports = new EntitySchema({
             type: "int",
             generated: true,
         },
-        title: {
-            type: "varchar",
+        userId: {
+            type: "int",
         },
-        text: {
+        request: {
             type: "text",
         },
-    },
-    relations: {
-        categories: {
-            target: "category",
-            type: "many-to-many",
-            joinTable: true,
-            cascade: true,
+        response: {
+            type: "text",
         },
+        model: {
+            type: "varchar",
+        }
     },
 })

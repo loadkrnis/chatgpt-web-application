@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <title>ChatGPT Front-end</title>
-    <link rel="stylesheet" href="./assets/css/highlight.min.css">
-    <link rel="stylesheet" href="./assets/css/index.css">
-    <link rel="icon" href="favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description"
-          content="Experience OpenAI API with this simple web application"
+    <link href="./assets/css/highlight.min.css" rel="stylesheet">
+    <link href="./assets/css/index.css" rel="stylesheet">
+    <link href="favicon.ico" rel="icon"/>
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <meta content="Experience OpenAI API with this simple web application"
+          name="description"
     />
 </head>
 <body>
@@ -22,15 +22,15 @@
     <div id="model-select-container">
         <label for="model-select">Select model:</label>
         <select id="model-select">
-            <option value="chatgpt" selected>ChatGPT (Improved version of GPT-3 and can understand as well as generate natural language or code)</option>
-            <option value="gpt">GPT-3 (Understand and generate natural language )</option>
-            <option value="image">Create Image (Create AI image using DALL·E models)</option>
-            <option value="whisper">Whisper(AI speech recognition model)</option>
+            <option selected value="chatgpt">ChatGPT (GPT-3의 개선된 버전으로 자연어 또는 코드를 이해하고 생성할 수 있습니다.)
+            </option>
+            <option value="image">이미지 생성 (DALL-E 모델을 사용하여 AI 이미지 생성할 수 있습니다.)</option>
+            <option value="whisper">음성 인식 (Whisper 모델을 사용하여 AI 음성 인식을 할 수 있습니다.)</option>
         </select>
     </div>
     <div id="input-container">
-        <input type="file" id="whisper-file" accept=".mp3,.mp4,.mpeg,.mpga,.m4a,.wav,.webm" style="display:none;">
-        <div id="prompt-input" contentEditable></div>
+        <input accept=".mp3,.mp4,.mpeg,.mpga,.m4a,.wav,.webm" id="whisper-file" style="display:none;" type="file">
+        <div contentEditable id="prompt-input"></div>
         <button id="submit-button"></button>
     </div>
 </div>
