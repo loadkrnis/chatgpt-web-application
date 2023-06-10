@@ -37,6 +37,10 @@ app.use(session({
 
 app.use(cors());
 app.use(express.json());
+app.use('/logout', function (req, res) {
+    req.session.destroy();
+    res.redirect('/login.html');
+})
 app.use(function (req, res, next) {
     const userId = req.session.userId;
     const url = req.url;
