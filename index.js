@@ -4,8 +4,9 @@ const app = express();
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const multer  = require('multer');
-const { v4: uuidv4 } = require('uuid');
+const multer = require('multer');
+const {v4: uuidv4} = require('uuid');
+const session = require("express-session");
 require("dotenv").config();
 const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
@@ -13,8 +14,28 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
+app.use(session({
+    secret: 'SECRET', // 암호화하는 데 쓰일 키
+    resave: false, // 세션을 언제나 저장할지 설정함
+    saveUninitialized: true, // 세션에 저장할 내역이 없더라도 처음부터 세션을 생성할지 설정
+    cookie: {	// 세션 쿠키 설정 (세션 관리 시 클라이언트에 보내는 쿠키)
+        httpOnly: false, // 자바스크립트를 통해 세션 쿠키를 사용할 수 없도록 함
+    },
+}));
+
 app.use(cors());
 app.use(express.json());
+app.use(function (req, res, next) {
+    const userId = req.session.userId;
+    const url = req.url;
+    if (url.includes('assets') || url.includes('login') || url.includes('signup')) {
+        return next();
+    }
+    if (userId === undefined) {
+        return res.redirect('/login.html');
+    }
+    return next();
+});
 app.use('/', express.static(__dirname + '/client')); // Serves resources from client folder
 
 // Set up Multer to handle file uploads
@@ -29,7 +50,7 @@ const upload = multer({
             cb(null, filename);
         }
     }),
-    limits: { fileSize: 1024 * 1024 * 10 }, // 10 MB
+    limits: {fileSize: 1024 * 1024 * 10}, // 10 MB
     fileFilter: function (req, file, cb) {
         const allowedExtensions = ['.mp3', '.mp4', '.mpeg', '.mpga', '.m4a', '.wav', '.webm'];
         const extension = path.extname(file.originalname);
@@ -82,9 +103,9 @@ app.post('/get-prompt-result', async (req, res) => {
         if (model === 'chatgpt') {
             console.log(prompt)
             const result = await openai.createChatCompletion({
-                model:"gpt-3.5-turbo",
+                model: "gpt-3.5-turbo",
                 messages: [
-                    { role: "user", content: prompt }
+                    {role: "user", content: prompt}
                 ]
             })
             return res.send(result.data.choices[0]?.message?.content);
@@ -103,6 +124,16 @@ app.post('/get-prompt-result', async (req, res) => {
         return res.status(500).send(errorMsg);
     }
 });
+
+app.post('/login', async (req, res) => {
+    console.log(req.session.userId);
+    console.log(req.body.email);
+    console.log(req.body.password);
+    req.session.userId = 10;
+    return res.json({
+        success: true,
+    });
+})
 
 const port = process.env.PORT || 3001;
 app.listen(port, () => console.log(`Listening on port ${port}`));
