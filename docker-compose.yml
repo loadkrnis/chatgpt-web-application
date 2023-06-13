@@ -24,4 +24,5 @@ services:
       MYSQL_USER: test
       MYSQL_PASSWORD: secret
       MYSQL_ROOT_PASSWORD: test
+      SERVICE_TAGS: dev
       SERVICE_NAME: mysql
