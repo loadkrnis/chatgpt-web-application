@@ -3,8 +3,7 @@ const email = document.getElementById('input-email');
 const password = document.getElementById('input-password');
 
 signUpButton.addEventListener('click', async () => {
-    // if (email.value === '' || password.value === '' || email.value.includes('@') === false) {
-    if (email.value === '' || password.value === '') {
+    if (email.value === '' || password.value === '' || email.value.includes('@') === false) {
         return
     }
     const response = await fetch('/sign-up', {

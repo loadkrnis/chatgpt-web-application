@@ -202,7 +202,6 @@ app.post('/sign-up', async (req, res) => {
 
 app.get('/chat-history', async (req, res) => {
     const userId = req.session.userId;
-    console.log('userId', userId);
     const postRepository = dataSource.getRepository("post");
     const result = await postRepository.find({
         where: {

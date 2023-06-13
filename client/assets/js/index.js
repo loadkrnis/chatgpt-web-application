@@ -1,5 +1,6 @@
 const API_URL = '/';
 const converter = new showdown.Converter();
+converter.setOption('simpleLineBreaks', false);
 let promptToRetry = null;
 let uniqueIdToRetry = null;
 
@@ -13,18 +14,25 @@ const fileInput = document.getElementById("whisper-file");
 fetch('/chat-history', {
     method: 'GET',
 }).then(response => response.json()).then(response => {
-    console.log(response.data);
     response.data.forEach(chat => {
-        console.log(chat);
         addResponse(true, chat.request, true, chat.id);
         if (chat.model === 'image') {
             addResponse(false, '', true, chat.id);
             const responseElement = document.getElementById(chat.id);
             responseElement.innerHTML = `<img src="${chat.response}" class="ai-image" alt="generated image"/>`
         } else {
-            addResponse(false, chat.response, true, chat.id);
+            console.log(chat.response)
+            addResponse(false, converter.makeHtml(chat.response).replace(/[ ]*\n/g, "<br />\n"), true, chat.id);
         }
     });
+    promptToRetry = null;
+    uniqueIdToRetry = null;
+    regenerateResponseButton.style.display = 'none';
+    setTimeout(() => {
+        // Scroll to the bottom of the response list
+        responseList.scrollTop = responseList.scrollHeight;
+        hljs.highlightAll();
+    }, 10);
 });
 modelSelect.addEventListener("change", function () {
     if (modelSelect.value === "whisper") {
@@ -150,7 +158,6 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
     }
     // Get the prompt input
     const question = document.querySelectorAll('div.chat');
-    console.log(question);
     const prompt = _promptToRetry ?? promptInput.textContent;
 
     // If a response is already being generated or the prompt is empty, return
@@ -166,7 +173,6 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
 
     if (!_uniqueIdToRetry) {
         // Add the prompt to the response list
-        console.log(modelSelect.value);
         if (modelSelect.value === 'chatgpt') {
             addResponse(true, `<div>${prompt}</div>`, true);
         } else {
@@ -208,7 +214,8 @@ async function getGPTResult(_promptToRetry, _uniqueIdToRetry) {
             responseElement.innerHTML = `<img src="${responseText}" class="ai-image" alt="generated image"/>`
         } else {
             // Set the response text
-            responseElement.innerHTML = converter.makeHtml(responseText.trim());
+            console.log(responseText.trim());
+            responseElement.innerHTML = converter.makeHtml(responseText.trim().replace(/[ ]*\n/g, "<br />\n"));
         }
 
         promptToRetry = null;
