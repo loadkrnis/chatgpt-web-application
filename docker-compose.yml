@@ -1,8 +1,7 @@
 mysql:
   image: hypriot/rpi-mysql
   container_name: mysql
-  restart: unless-stopped
-  tty: true
+  tty: false
   ports:
     - "3306:3306"
   environment:
