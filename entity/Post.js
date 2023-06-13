@@ -13,9 +13,11 @@ module.exports = new EntitySchema({
         },
         request: {
             type: "text",
+            charset: "utf8mb4",
         },
         response: {
             type: "text",
+            charset: "utf8mb4",
         },
         model: {
             type: "varchar",
