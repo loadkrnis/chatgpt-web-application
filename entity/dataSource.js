@@ -9,5 +9,4 @@ exports.dataSource = new typeorm.DataSource({
     database: "test",
     synchronize: true,
     entities: [require("./Post"), require("./Category"), require("./User")],
-    charset: "utf8mb4",
 });
